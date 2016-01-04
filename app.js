@@ -12,13 +12,14 @@ var session      = require('express-session');
 
 mongoose.connect("mongodb://localhost:27017");
 
-require('./config/passport')(passport);
+// require('./config/passport')(passport);
 
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser()); // get information from html forms
 app.use('views',__dirname + '/templates')
 app.set('view engine', 'jade');
+app.set('static',express.static(__dirname + 'public'))
 
 app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret
 app.use(passport.initialize());
@@ -43,7 +44,7 @@ app.get('/signup',function (req,res)
 
 app.get('/profile', isLoggedIn, function(req, res)
 {
-    res.render('profile.ejs', {user : req.user});
+    res.render('profile.jade', {user : req.user});
 });
 
 app.get('/logout', function(req, res)
