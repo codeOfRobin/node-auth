@@ -19,17 +19,20 @@ html
             .row
                 .col-sm-6
                     .well
-                        h3
-                            span.fa.fa-user
-                            |Local
+                        h3.text-primary
+                            span.fa.fa-facebook
+                            |Facebook
                         p
                             strong id:
-                            |#{user._id}
+                            |#{user.facebook.id}
+                            br
+                            strong token:
+                            |#{user.facebook.token}
                             br
                             strong email:
-                            |#{user.local.email}
+                            |#{user.facebook.email}
                             br
-                            strong password:
-                            |#{user.local.password}
+                            strong name:
+                            |#{user.facebook.name}
                             br
                             
