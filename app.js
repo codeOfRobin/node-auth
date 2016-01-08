@@ -12,6 +12,7 @@ var router       = express.Router()
 
 var LocalStrategy   = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
+var TwitterStrategy  = require('passport-twitter').Strategy;
 
 
 passport.use(new FacebookStrategy({
@@ -65,7 +66,51 @@ passport.use(new FacebookStrategy({
 
     }));
 
+passport.use(new TwitterStrategy({
 
+    consumerKey     : "x64u6Y2ghFr0XJANcAvzY0ZbC",
+    consumerSecret  : "PD6G88EPkfJdz0UC92asC77mxpyvhEicSTPetvJPagV9qsaGn2",
+    callbackURL     : "	http://127.0.0.1:3000/auth/twitter/callback"
+
+},
+function(token, tokenSecret, profile, done) {
+
+    // make the code asynchronous
+// User.findOne won't fire until we have all our data back from Twitter
+    process.nextTick(function() {
+
+        User.findOne({ 'twitter.id' : profile.id }, function(err, user) {
+
+            // if there is an error, stop everything and return that
+            // ie an error connecting to the database
+            if (err)
+                return done(err);
+
+            // if the user is found then log them in
+            if (user) {
+                return done(null, user); // user found, return that user
+            } else {
+                // if there is no user, create them
+                var newUser                 = new User();
+
+                // set all of the user data that we need
+                newUser.twitter.id          = profile.id;
+                newUser.twitter.token       = token;
+                newUser.twitter.username    = profile.username;
+                newUser.twitter.displayName = profile.displayName;
+
+                // save our user into the database
+                newUser.save(function(err) {
+                    if (err)
+                        throw err;
+                    return done(null, newUser);
+                });
+            }
+        });
+
+});
+
+}));
 mongoose.connect("mongodb://localhost:27017/test")
 
 app.use(morgan('dev')); // log every request to the console
@@ -244,7 +289,35 @@ app.get('/auth/facebook/callback',
             successRedirect : '/profile',
             failureRedirect : '/'
 }));
+app.get('/', function(req, res) {
+    res.render('index.ejs'); // load the index.ejs file
+});
 
+// route for login form
+// route for processing the login form
+// route for signup form
+// route for processing the signup form
+
+// route for showing the profile page
+app.get('/profile', isLoggedIn, function(req, res) {
+    res.render('profile.ejs', {
+        user : req.user // get the user out of session and pass to template
+    });
+});
+
+    // route for logging out
+app.get('/logout', function(req, res) {
+    req.logout();
+    res.redirect('/');
+});
+app.get('/auth/twitter', passport.authenticate('twitter'));
+
+// handle the callback after twitter has authenticated the user
+app.get('/auth/twitter/callback',
+    passport.authenticate('twitter', {
+        successRedirect : '/profile',
+        failureRedirect : '/'
+    }));
 function isLoggedIn(req, res, next) {
 
     // if user is authenticated in the session, carry on
